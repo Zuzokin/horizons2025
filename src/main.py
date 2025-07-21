@@ -6,6 +6,7 @@ from .entities.user import User
 from .api import register_routes
 from .logging import configure_logging, LogLevels
 
+from fastapi.templating import Jinja2Templates
 
 configure_logging(LogLevels.info)
 
