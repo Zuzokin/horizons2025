@@ -1,6 +1,6 @@
 from dash import Dash, dcc, html, Input, Output
 # Импорт страниц — как у вас
-from dash_app.pages.main_page import main_page_layout
+from dash_app.pages.main_page import main_page_layout, register_main_callbacks
 from dash_app.pages.predict_page import predict_page_layout, register_predict_callbacks
 from dash_app.pages.regions_page import regions_page_layout, register_regions_callbacks
 from dash_app.pages.pipe_type_page import pipe_type_page_layout, register_pipe_type_callbacks
@@ -137,5 +137,6 @@ def create_dash_app():
     register_consignee_callbacks(app)
     register_material_callbacks(app)
     register_predict_callbacks(app)
+    register_main_callbacks(app)
 
     return app
