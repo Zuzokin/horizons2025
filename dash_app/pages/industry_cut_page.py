@@ -1,4 +1,4 @@
-from dash import dcc, html, Input, Output
+from dash import dcc, html, Input, Output, State
 import pandas as pd
 import os
 import plotly.express as px
@@ -35,10 +35,14 @@ def industry_cut_page_layout():
             ),
         ], style={"display": "flex", "alignItems": "center", "gap": "10px", "marginBottom": "20px"}),
         html.Div([
-            html.Label("Дата отгрузки с"),
-            dcc.Input(id="PERIOD_IN", type="text", placeholder="YYYY-MM-DD", style={"width": "120px"}),
-            html.Label("по", style={"marginLeft": "5px"}),
-            dcc.Input(id="PERIOD_OUT", type="text", placeholder="YYYY-MM-DD", style={"width": "120px", "marginLeft": "5px"}),
+            html.Label("Дата отгрузки"),
+            dcc.DatePickerRange(
+                id='industry-cut-date-picker-range',
+                start_date_placeholder_text="Начало",
+                end_date_placeholder_text="Конец",
+                display_format='YYYY-MM-DD',
+                style={"marginLeft": "5px"}
+            ),
             html.Button("Обновить диаграмму", id="BT_REFRESH_INDUSTRY", n_clicks=0, style={"marginLeft": "20px"}),
         ], style={"display": "flex", "alignItems": "center", "gap": "10px", "marginBottom": "20px"}),
         html.Div(id="industry-cut-graph-container")
@@ -55,12 +59,12 @@ def register_industry_cut_callbacks(app):
     @app.callback(
         Output("industry-cut-graph-container", "children"),
         Input("BT_REFRESH_INDUSTRY", "n_clicks"),
-        [Input("end_consumer_industry", "value"),
-         Input("delivery_region_ru", "value"),
-         Input("PERIOD_IN", "value"),
-         Input("PERIOD_OUT", "value")]
+        [State("end_consumer_industry", "value"),
+         State("delivery_region_ru", "value"),
+         State("industry-cut-date-picker-range", "start_date"),
+         State("industry-cut-date-picker-range", "end_date")]
     )
-    def update_industry_cut_graph(n_clicks, industries, regions, period_in, period_out):
+    def update_industry_cut_graph(n_clicks, industries, regions, start_date, end_date):
         if n_clicks == 0:
             return html.Div("Настройте фильтры и нажмите 'Обновить диаграмму'", style={"color": "grey"})
             
@@ -71,15 +75,15 @@ def register_industry_cut_callbacks(app):
         if regions:
             dff = dff[dff["Регион ПОСТАВКИ РФ"].isin(regions)]
 
-        if period_in:
+        if start_date:
             try:
-                period_in_dt = pd.to_datetime(period_in)
+                period_in_dt = pd.to_datetime(start_date)
                 dff = dff[dff["Дата фактической отгрузки"] >= period_in_dt]
             except Exception:
                 pass
-        if period_out:
+        if end_date:
             try:
-                period_out_dt = pd.to_datetime(period_out)
+                period_out_dt = pd.to_datetime(end_date)
                 dff = dff[dff["Дата фактической отгрузки"] <= period_out_dt]
             except Exception:
                 pass

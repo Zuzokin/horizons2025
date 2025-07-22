@@ -1,4 +1,4 @@
-from dash import dcc, html, Input, Output
+from dash import dcc, html, Input, Output, State
 import pandas as pd
 import os
 import plotly.graph_objs as go
@@ -30,10 +30,14 @@ def regions_page_layout():
                 placeholder="Год",
                 style={"width": "120px", "display": "inline-block", "marginLeft": "5px"}
             ),
-            html.Label("Период с", style={"marginLeft": "20px"}),
-            dcc.Input(id="PERIOD_IN", type="text", placeholder="YYYY-MM-DD", style={"width": "120px"}),
-            html.Label("по", style={"marginLeft": "5px"}),
-            dcc.Input(id="PERIOD_OUT", type="text", placeholder="YYYY-MM-DD", style={"width": "120px"}),
+            html.Label("Период", style={"marginLeft": "20px"}),
+            dcc.DatePickerRange(
+                id='regions-date-picker-range',
+                start_date_placeholder_text="Начало",
+                end_date_placeholder_text="Конец",
+                display_format='YYYY-MM-DD',
+                style={"marginLeft": "5px"}
+            ),
             html.Button("Обновить диаграмму", id="BT_REFRESH", n_clicks=0, style={"marginLeft": "20px"}),
         ], style={"display": "flex", "alignItems": "center", "gap": "10px", "marginBottom": "20px"}),
         html.Div(id="regions-graph-container")
@@ -49,27 +53,27 @@ def register_regions_callbacks(app):
     df_bd["Стоимость ТД без НДС, руб."] = pd.to_numeric(df_bd["Стоимость ТД без НДС, руб."], errors="coerce")
     @app.callback(
         Output("regions-graph-container", "children"),
-        [Input("BT_REFRESH", "n_clicks")],
-        [Input("CB_PLANTS", "value"),
-         Input("YEAR", "value"),
-         Input("PERIOD_IN", "value"),
-         Input("PERIOD_OUT", "value")]
+        Input("BT_REFRESH", "n_clicks"),
+        [State("CB_PLANTS", "value"),
+         State("YEAR", "value"),
+         State("regions-date-picker-range", "start_date"),
+         State("regions-date-picker-range", "end_date")]
     )
-    def update_regions_graph(n_clicks, plant, year, period_in, period_out):
+    def update_regions_graph(n_clicks, plant, year, start_date, end_date):
         if not plant:
             return html.Div("Пожалуйста, выберите завод (обязательное поле)", style={"color": "red"})
         dff = df_bd[df_bd["Завод"] == plant]
         if year:
             dff = dff[dff["Год отгрузки"] == year]
-        if period_in:
+        if start_date:
             try:
-                period_in_dt = pd.to_datetime(period_in)
+                period_in_dt = pd.to_datetime(start_date)
                 dff = dff[dff["Дата фактической отгрузки"] >= period_in_dt]
             except Exception:
                 pass
-        if period_out:
+        if end_date:
             try:
-                period_out_dt = pd.to_datetime(period_out)
+                period_out_dt = pd.to_datetime(end_date)
                 dff = dff[dff["Дата фактической отгрузки"] <= period_out_dt]
             except Exception:
                 pass
