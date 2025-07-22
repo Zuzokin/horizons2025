@@ -3,8 +3,9 @@ import plotly.express as px
 import pandas as pd
 import os
 # Добавляю импорты страниц
-from pages.main_page import main_page_layout
-from pages.regions_page import regions_page_layout, register_regions_callbacks
+from dash_app.pages.main_page import main_page_layout
+from dash_app.pages.regions_page import regions_page_layout, register_regions_callbacks
+from dash_app.pages.pipe_type_page import pipe_type_page_layout, register_pipe_type_callbacks
 
 def create_dash_app():
     app = Dash(
@@ -19,6 +20,8 @@ def create_dash_app():
             dcc.Link("Главная (Bar Chart)", href="/dash/"),
             " | ",
             dcc.Link("Диаграмма регионов", href="/dash/regions"),
+            " | ",
+            dcc.Link("Диаграмма по видам труб", href="/dash/pipe-type"),
         ], style={"margin": "20px"}),
         html.Div(id="page-content")
     ])
@@ -30,10 +33,13 @@ def create_dash_app():
     def render_page(pathname):
         if pathname == "/dash/regions":
             return regions_page_layout()
+        elif pathname == "/dash/pipe-type":
+            return pipe_type_page_layout()
         # default: главная страница
         return main_page_layout()
 
     # Регистрирую callbacks для regions_page
     register_regions_callbacks(app)
+    register_pipe_type_callbacks(app)
 
     return app
