@@ -16,9 +16,7 @@ router = APIRouter(
     status_code=status.HTTP_201_CREATED,
 )
 def upload_excel(
-        db: DbSession,
-        file: UploadFile = File(..., description="Excel-файл (.xlsx или .xls)"),
-
+    file: UploadFile = File(..., description="Excel-файл (.xlsx или .xls)"),
 ):
     if not file.filename.lower().endswith((".xlsx", ".xls")):
         raise HTTPException(
@@ -26,7 +24,7 @@ def upload_excel(
             detail="Неподдерживаемый формат, загрузите .xlsx или .xls"
         )
     try:
-        result = service.process(file, db)
+        result = service.process(file)
     except Exception as e:
         raise HTTPException(
             status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
@@ -34,6 +32,7 @@ def upload_excel(
         )
 
     return {
-        "message": "Файл успешно обработан",
-        "rows_loaded": result.rows_loaded
+        "message": "Файл успешно обработан и сохранён в CSV",
+        "rows_loaded": result.rows_loaded,
+        "rows_error": result.rows_failed
     }

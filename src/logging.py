@@ -25,3 +25,4 @@ def configure_logging(log_level: str = LogLevels.error):
         return
 
     logging.basicConfig(level=log_level)
+

@@ -1,4 +1,4 @@
-from dash_app.app import create_dash_app
+from dash_app.app  import create_dash_app
 from .database.core import engine, Base
 
 from .api import register_routes
