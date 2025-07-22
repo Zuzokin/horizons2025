@@ -16,7 +16,8 @@ def dynamics_page_layout():
             dcc.Dropdown(
                 id="dynamics_end_consumer_industry",
                 options=[{"label": i, "value": i} for i in unique_industries],
-                placeholder="Выберите отрасль",
+                placeholder="Выберите одну или несколько отраслей",
+                multi=True,
                 style={"width": "400px"}
             ),
             html.Label("Дата отгрузки", style={"marginLeft": "20px"}),
@@ -46,46 +47,53 @@ def register_dynamics_callbacks(app):
          State("dynamics-date-picker-range", "start_date"),
          State("dynamics-date-picker-range", "end_date")]
     )
-    def update_dynamics_graph(n_clicks, industry, start_date, end_date):
+    def update_dynamics_graph(n_clicks, industries, start_date, end_date):
         if n_clicks == 0:
             return html.Div("Настройте фильтры и нажмите 'Обновить диаграмму'", style={"color": "grey"})
 
         dff = df_bd.copy()
-        
         title = 'Динамика отгрузок'
-        if industry:
-            dff = dff[dff["Отрасль Основного Потребителя"] == industry]
-            title += f' для отрасли "{industry}"'
+        if industries:
+            dff = dff[dff["Отрасль Основного Потребителя"].isin(industries)]
+            if isinstance(industries, list) and len(industries) == 1:
+                title += f' для отрасли "{industries[0]}"'
+            elif isinstance(industries, list) and len(industries) > 1:
+                title += f' по выбранным отраслям'
 
         if start_date:
             try:
                 period_in_dt = pd.to_datetime(start_date)
                 dff = dff[dff["Дата фактической отгрузки"] >= period_in_dt]
             except Exception:
-                pass # Ignore invalid date format
-        
+                pass
         if end_date:
             try:
                 period_out_dt = pd.to_datetime(end_date)
                 dff = dff[dff["Дата фактической отгрузки"] <= period_out_dt]
             except Exception:
-                pass # Ignore invalid date format
+                pass
 
         if dff.empty:
             return html.Div("Нет данных по выбранным фильтрам", style={"color": "orange"})
 
-        # Group by date and sum weight
         dff = dff.sort_values(by="Дата фактической отгрузки")
-        dynamics_data = dff.groupby(dff["Дата фактической отгрузки"].dt.to_period("D"))["Вес, тн."].sum().reset_index()
+        # Группировка по дате и отрасли
+        dynamics_data = dff.groupby([
+            dff["Дата фактической отгрузки"].dt.to_period("D"),
+            "Отрасль Основного Потребителя"
+        ])["Вес, тн."].sum().reset_index()
         dynamics_data["Дата фактической отгрузки"] = dynamics_data["Дата фактической отгрузки"].dt.to_timestamp()
-
 
         if dynamics_data.empty:
             return html.Div("Нет данных для построения диаграммы после агрегации.", style={"color": "orange"})
 
-        fig = px.line(dynamics_data, 
-                      x="Дата фактической отгрузки", 
-                      y="Вес, тн.", 
-                      title=title)
-        
+        fig = px.line(
+            dynamics_data,
+            x="Дата фактической отгрузки",
+            y="Вес, тн.",
+            color="Отрасль Основного Потребителя",
+            title=title,
+            labels={"Отрасль Основного Потребителя": "Отрасль"}
+        )
+        fig.update_layout(legend_title_text="Отрасль")
         return dcc.Graph(figure=fig) 

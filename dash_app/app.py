@@ -1,8 +1,5 @@
 from dash import Dash, dcc, html, Input, Output
-import plotly.express as px
-import pandas as pd
-import os
-# Добавляю импорты страниц
+# Импорт страниц — как у вас
 from dash_app.pages.main_page import main_page_layout
 from dash_app.pages.predict_page import predict_page_layout, register_predict_callbacks
 from dash_app.pages.regions_page import regions_page_layout, register_regions_callbacks
@@ -21,31 +18,88 @@ def create_dash_app():
         suppress_callback_exceptions=True
     )
 
+    NAV_LINKS = [
+        {"label": "Главная", "href": "/dash/"},
+        {"label": "Диаграмма регионов", "href": "/dash/regions"},
+        {"label": "Диаграмма по видам труб", "href": "/dash/pipe-type"},
+        {"label": "Отраслевой срез", "href": "/dash/industry-cut"},
+        {"label": "Географический срез", "href": "/dash/geographical-cut"},
+        {"label": "Динамика", "href": "/dash/dynamics"},
+        {"label": "Продукт", "href": "/dash/product"},
+        {"label": "Грузополучатель", "href": "/dash/consignee"},
+        {"label": "Материал", "href": "/dash/material"},
+        {"label": "Предсказание", "href": "/dash/predict"},
+    ]
+
     app.layout = html.Div([
         dcc.Location(id="url", refresh=False),
+
+        # NAVBAR
         html.Nav([
-            dcc.Link("Главная (Bar Chart)", href="/dash/"),
-            " | ",
-            dcc.Link("Диаграмма регионов", href="/dash/regions"),
-            " | ",
-            dcc.Link("Диаграмма по видам труб", href="/dash/pipe-type"),
-            " | ",
-            dcc.Link("Отраслевой срез", href="/dash/industry-cut"),
-            " | ",
-            dcc.Link("Географический срез", href="/dash/geographical-cut"),
-            " | ",
-            dcc.Link("Динамика", href="/dash/dynamics"),
-            " | ",
-            dcc.Link("Продукт", href="/dash/product"),
-            " | ",
-            dcc.Link("Грузополучатель", href="/dash/consignee"),
-            " | ",
-            dcc.Link("Материал", href="/dash/material"),
-            " | ",
-            dcc.Link("Предсказание", href="/dash/predict"),
-        ], style={"margin": "20px"}),
-        html.Div(id="page-content")
+            # Логотип/название
+            html.Div("TMK BI Dashboard", style={
+                "fontWeight": "bold",
+                "fontSize": "1.8rem",
+                "color": "#163c85",
+                "letterSpacing": "0.04em",
+                "marginRight": "32px",
+                "fontFamily": "Segoe UI, Arial"
+            }),
+
+            # Ссылки
+            html.Div([
+                dcc.Link(link["label"], href=link["href"], className="nav-link", id={"type": "nav-link", "index": link["href"]})
+                for link in NAV_LINKS
+            ], style={
+                "display": "flex",
+                "gap": "10px",
+                "alignItems": "center"
+            }),
+        ], style={
+            "display": "flex",
+            "justifyContent": "flex-start",
+            "alignItems": "center",
+            "padding": "18px 38px",
+            "backgroundColor": "#f5f7fa",
+            "boxShadow": "0 2px 7px 0 #e3e3e3",
+            "marginBottom": "32px"
+        }),
+
+        html.Div(id="page-content", style={"margin": "0 32px"})
     ])
+
+    # Стили для ссылок (через Dash clientsidedash)
+    app.clientside_callback(
+        """
+        function(pathname) {
+            setTimeout(() => {
+                let links = document.querySelectorAll('.nav-link');
+                links.forEach(link => {
+                    if(link.getAttribute('href') === pathname) {
+                        link.style.fontWeight = "bold";
+                        link.style.textDecoration = "underline";
+                        link.style.background = "#e4eafd";
+                        link.style.borderRadius = "7px";
+                        link.style.color = "#184b8f";
+                        link.style.boxShadow = "0 2px 8px #e3e7fa inset";
+                        link.style.padding = "8px 15px";
+                    } else {
+                        link.style.fontWeight = "normal";
+                        link.style.textDecoration = "none";
+                        link.style.background = "";
+                        link.style.borderRadius = "";
+                        link.style.color = "#375a8c";
+                        link.style.boxShadow = "";
+                        link.style.padding = "8px 15px";
+                    }
+                });
+            }, 10);
+            return '';
+        }
+        """,
+        Output('page-content', 'data-dummy'),
+        Input('url', 'pathname')
+    )
 
     @app.callback(
         Output("page-content", "children"),
@@ -70,10 +124,10 @@ def create_dash_app():
             return material_page_layout()
         elif pathname == "/dash/predict":
             return predict_page_layout()
-        # default: главная страница
+        # default
         return main_page_layout()
 
-    # Регистрирую callbacks
+    # Регистрация callbacks
     register_regions_callbacks(app)
     register_pipe_type_callbacks(app)
     register_industry_cut_callbacks(app)
