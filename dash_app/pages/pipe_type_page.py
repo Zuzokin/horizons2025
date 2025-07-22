@@ -2,6 +2,7 @@ from dash import dcc, html, Input, Output, State
 import pandas as pd
 import os
 import plotly.graph_objs as go
+from plotly.subplots import make_subplots
 
 def pipe_type_page_layout():
     CSV_PATH = os.path.join(os.path.dirname(__file__), '../../data/5cdfef22-9165-44bd-8e4e-e93346180843_Отгрузка ТМК.csv')
@@ -18,6 +19,8 @@ def pipe_type_page_layout():
             dcc.Dropdown(
                 id="CB_PIPE_TYPE_M1",
                 options=[{"label": p, "value": p} for p in unique_pipe_types],
+                value=list(unique_pipe_types),  # по умолчанию все
+                multi=True,
                 placeholder="Выберите вид труб",
                 style={"width": "300px"}
             ),
@@ -55,10 +58,11 @@ def register_pipe_type_callbacks(app):
          State("pipe-type-date-picker-range", "end_date"),
          State("CB_PLANTS", "value")]
     )
-    def update_pipe_type_graph(n_clicks, pipe_type, start_date, end_date, plant):
-        if not pipe_type:
-            return html.Div("Пожалуйста, выберите вид труб (обязательное поле)", style={"color": "red"})
-        dff = df_bd[df_bd["Вид труб-М1"] == pipe_type]
+    def update_pipe_type_graph(n_clicks, pipe_types, start_date, end_date, plant):
+        # pipe_types теперь список или None
+        dff = df_bd.copy()
+        if pipe_types:
+            dff = dff[dff["Вид труб-М1"].isin(pipe_types)]
         if plant:
             dff = dff[dff["Завод"] == plant]
         if start_date:
@@ -79,8 +83,14 @@ def register_pipe_type_callbacks(app):
             "Вес, тн.": "sum",
             "Цена ТД без НДС, руб./тн.": "sum"
         }).reset_index()
-        fig = go.Figure()
-        fig.add_bar(x=grouped["Регион Получателя"], y=grouped["Вес, тн."], name="Вес, тн.")
-        fig.add_bar(x=grouped["Регион Получателя"], y=grouped["Цена ТД без НДС, руб./тн."], name="Цена ТД без НДС, руб./тн.")
-        fig.update_layout(barmode="group", title="Диаграмма по видам труб по регионам", xaxis_title="Регион", yaxis_title="Значение")
-        return dcc.Graph(figure=fig) 
+        fig = make_subplots(specs=[[{"secondary_y": True}]])
+        fig.add_bar(x=grouped["Регион Получателя"], y=grouped["Вес, тн."], name="Вес, тн.", offsetgroup=0, secondary_y=False)
+        fig.add_bar(x=grouped["Регион Получателя"], y=grouped["Цена ТД без НДС, руб./тн."], name="Сумма цены, руб./тн.", offsetgroup=1, secondary_y=True)
+        fig.update_layout(
+            barmode="group",
+            title="Диаграмма по видам труб по регионам",
+            xaxis_title="Регион"
+        )
+        fig.update_yaxes(title_text="Вес, тн.", secondary_y=False)
+        fig.update_yaxes(title_text="Цена (сумма), руб./тн.", secondary_y=True)
+        return dcc.Graph(figure=fig)

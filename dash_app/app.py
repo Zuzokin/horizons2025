@@ -4,6 +4,7 @@ import pandas as pd
 import os
 # Добавляю импорты страниц
 from dash_app.pages.main_page import main_page_layout
+from dash_app.pages.predict_page import predict_page_layout, register_predict_callbacks
 from dash_app.pages.regions_page import regions_page_layout, register_regions_callbacks
 from dash_app.pages.pipe_type_page import pipe_type_page_layout, register_pipe_type_callbacks
 from dash_app.pages.industry_cut_page import industry_cut_page_layout, register_industry_cut_callbacks
@@ -40,6 +41,8 @@ def create_dash_app():
             dcc.Link("Грузополучатель", href="/dash/consignee"),
             " | ",
             dcc.Link("Материал", href="/dash/material"),
+            " | ",
+            dcc.Link("Предсказание", href="/dash/predict"),
         ], style={"margin": "20px"}),
         html.Div(id="page-content")
     ])
@@ -65,6 +68,8 @@ def create_dash_app():
             return consignee_page_layout()
         elif pathname == "/dash/material":
             return material_page_layout()
+        elif pathname == "/dash/predict":
+            return predict_page_layout()
         # default: главная страница
         return main_page_layout()
 
@@ -77,5 +82,6 @@ def create_dash_app():
     register_product_callbacks(app)
     register_consignee_callbacks(app)
     register_material_callbacks(app)
+    register_predict_callbacks(app)
 
     return app
