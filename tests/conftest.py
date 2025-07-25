@@ -6,7 +6,6 @@ from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 from src.database.core import Base
 from src.entities.user import User
-from src.entities.todo import Todo
 from src.auth.models import TokenData
 from src.auth.service import get_password_hash
 from src.rate_limiter import limiter
@@ -45,15 +44,6 @@ def test_user():
 def test_token_data():
     return TokenData(user_id=str(uuid4()))
 
-@pytest.fixture(scope="function")
-def test_todo(test_token_data):
-    return Todo(
-        id=uuid4(),
-        description="Test Description",
-        is_completed=False,
-        created_at=datetime.now(timezone.utc),
-        user_id=test_token_data.get_uuid()
-    )
 
 @pytest.fixture(scope="function")
 def client(db_session):

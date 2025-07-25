@@ -6,7 +6,7 @@ services:
     ports:
       - "8000:8000"
     environment:
-      - DATABASE_URL=postgresql://postgres:postgres@db:5432/cleanfastapi
+      - DATABASE_URL=postgresql://postgres:postgres@db:5432/horizonsbd
     depends_on:
       - db
     volumes:
@@ -16,7 +16,7 @@ services:
   db:
     image: postgres
     environment:
-      - POSTGRES_DB=cleanfastapi
+      - POSTGRES_DB=horizonsbd
       - POSTGRES_USER=postgres
       - POSTGRES_PASSWORD=postgres
     volumes:

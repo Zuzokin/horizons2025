@@ -1,5 +1,6 @@
 from dash_app.app  import create_dash_app
 from .database.core import engine, Base
+from .entities.generated_models import EndConsumer
 
 from .api import register_routes
 from .logging import configure_logging, LogLevels

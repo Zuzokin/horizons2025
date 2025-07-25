@@ -19,7 +19,6 @@ def create_dash_app():
     )
 
     NAV_LINKS = [
-        {"label": "Главная", "href": "/dash/"},
         {"label": "Диаграмма регионов", "href": "/dash/regions"},
         {"label": "Диаграмма по видам труб", "href": "/dash/pipe-type"},
         {"label": "Отраслевой срез", "href": "/dash/industry-cut"},
@@ -34,38 +33,59 @@ def create_dash_app():
     app.layout = html.Div([
         dcc.Location(id="url", refresh=False),
 
-        # NAVBAR
         html.Nav([
-            # Логотип/название
-            html.Div("TMK BI Dashboard", style={
-                "fontWeight": "bold",
-                "fontSize": "1.8rem",
-                "color": "#163c85",
-                "letterSpacing": "0.04em",
-                "marginRight": "32px",
-                "fontFamily": "Segoe UI, Arial"
-            }),
+            # Логотип — это ссылка
+            dcc.Link(
+                "ТМК Sales Analytics",
+                href="/dash/",
+                style={
+                    "fontWeight": "bold",
+                    "fontSize": "2.3rem",
+                    "color": "#123877",
+                    "letterSpacing": "0.04em",
+                    "marginRight": "38px",
+                    "fontFamily": "Segoe UI, Arial",
+                    "textDecoration": "none",
+                    "transition": "color 0.18s"
+                }
+            ),
 
             # Ссылки
             html.Div([
-                dcc.Link(link["label"], href=link["href"], className="nav-link", id={"type": "nav-link", "index": link["href"]})
+                dcc.Link(
+                    link["label"],
+                    href=link["href"],
+                    className="nav-link",
+                    id={"type": "nav-link", "index": link["href"]},
+                    style={
+                        "fontSize": "1.18rem",
+                        "fontWeight": "600",
+                        "padding": "10px 22px",
+                        "borderRadius": "9px",
+                        "transition": "background 0.2s, color 0.2s, box-shadow 0.18s",
+                        "textDecoration": "none",
+                        "color": "#274b89",
+                        "marginRight": "2px",
+                        "letterSpacing": "0.02em"
+                    }
+                )
                 for link in NAV_LINKS
             ], style={
                 "display": "flex",
-                "gap": "10px",
+                "gap": "7px",
                 "alignItems": "center"
             }),
         ], style={
             "display": "flex",
             "justifyContent": "flex-start",
             "alignItems": "center",
-            "padding": "18px 38px",
+            "padding": "24px 48px 22px 48px",
             "backgroundColor": "#f5f7fa",
-            "boxShadow": "0 2px 7px 0 #e3e3e3",
-            "marginBottom": "32px"
+            "boxShadow": "0 2px 8px 0 #e1e6f0",
+            "marginBottom": "36px"
         }),
 
-        html.Div(id="page-content", style={"margin": "0 32px"})
+        html.Div(id="page-content", style={"margin": "0 38px"})
     ])
 
     # Стили для ссылок (через Dash clientsidedash)
